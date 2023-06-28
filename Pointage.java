@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
 
-// javac -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar -d . DBInteraction.java Employe.java Conge.java
-public class Pointage extends DBInteraction{
+public class Pointage extends TableCRUD{
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> providedAttributes){
         try{
             preparedStatement.setString(1, providedAttributes.get(0));
             preparedStatement.setString(2, providedAttributes.get(1));
+            preparedStatement.setString(3, providedAttributes.get(2));
         }
         catch(Exception exc){
             System.err.println(exc);
@@ -75,7 +75,7 @@ public class Pointage extends DBInteraction{
     public int insert(ArrayList<String> providedAttributes){
         // only provide 2 args to it: the id and the state "oui" or "non"
         try{
-            String query = new String("INSERT INTO pointage VALUES(now(), ?, ?);");
+            String query = new String("INSERT INTO pointage VALUES(?, ?, ?);");
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             setVariablesInsert(preparedStatement, providedAttributes);
             int affectedRows = preparedStatement.executeUpdate();

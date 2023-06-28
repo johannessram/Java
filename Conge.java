@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
-// javac -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar -d . DBInteraction.java Employe.java Conge.java
-public class Conge extends DBInteraction{
+public class Conge extends TableCRUD{
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> attributes){
         try{   
             preparedStatement.setString(1, attributes.get(0));
@@ -19,39 +18,6 @@ public class Conge extends DBInteraction{
         catch(Exception exc){
             System.err.println(exc);
         }
-    }
-
-    public int insert(ArrayList<String> attributes){
-        String numEmp = createValablePrimaryKey("conge");
-        attributes.add(0, numEmp);
-        try{
-            String query = new String("INSERT INTO conge VALUES(?, ?, ?, ?, ?, ?);");
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            setVariablesInsert(preparedStatement, attributes);
-            int affectedRows = preparedStatement.executeUpdate();
-            return affectedRows;
-        }
-        catch(Exception exc){
-            System.err.println(exc);
-        }
-        return -1;
-    }
-
-    public ArrayList<ArrayList<String>> select(ArrayList<String> columns){
-        String joinedColumns = joinAttributesWithComa(columns);
-        ArrayList<ArrayList<String>> formatedResult = new ArrayList<ArrayList<String>>();
-        try{
-            String query = new String("SELECT " + joinedColumns + " FROM conge; ");
-            ResultSet reader;
-            Statement statement = connection.createStatement();
-            reader = statement.executeQuery(query);
-            // convertResultSet of the parent
-            formatedResult = convertResultSet(columns, reader);
-        }
-        catch(Exception exc){
-            System.err.println(exc);
-        }
-        return formatedResult;
     }
 
     private void setVariablesUpdate(PreparedStatement preparedStatement, String primaryKey, HashMap<String, String> updateFields){
@@ -87,6 +53,39 @@ public class Conge extends DBInteraction{
         catch(Exception exc){
             System.err.println(exc);
         }
+    }
+
+    public int insert(ArrayList<String> attributes){
+        String primaryKey = UsefulMethods.createValablePrimaryKey("conge");
+        attributes.add(0, primaryKey);
+        try{
+            String query = new String("INSERT INTO conge VALUES(?, ?, ?, ?, ?, ?); ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            setVariablesInsert(preparedStatement, attributes);
+            int affectedRows = preparedStatement.executeUpdate();
+            return affectedRows;
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
+        return -1;
+    }
+
+    public ArrayList<ArrayList<String>> select(ArrayList<String> columns){
+        String joinedColumns = joinAttributesWithComa(columns);
+        ArrayList<ArrayList<String>> formatedResult = new ArrayList<ArrayList<String>>();
+        try{
+            String query = new String("SELECT " + joinedColumns + " FROM conge; ");
+            ResultSet reader;
+            Statement statement = connection.createStatement();
+            reader = statement.executeQuery(query);
+            // convertResultSet of the parent
+            formatedResult = convertResultSet(columns, reader);
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
+        return formatedResult;
     }
 
     public int update(String primaryKey, HashMap<String, String> updateFields){

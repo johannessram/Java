@@ -1,40 +1,35 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
+import DBInteractionPackage.TableCRUD;
 import DBInteractionPackage.DBInteraction;
+import DBInteractionPackage.UsefulMethods;
 import DBInteractionPackage.Employe;
 import DBInteractionPackage.Pointage;
 import DBInteractionPackage.Conge;
 
 // java -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar Main.java
 class Main{
-    public static void main(String [] args){
-        String url = "jdbc:mysql://localhost:3306/projet4Java";
-        String uid = "projet4Java";
-        String pwd = "test";
-        // create an instance of a class named like the table to which we want to CRUD
-        Conge conge = new Conge();
-        conge.openConnection(url, uid, pwd);
+    static String url = "jdbc:mysql://localhost:3306/projet4Java";
+    static String uid = "projet4Java";
+    static String pwd = "test";
 
-        // test insert
-        // int aff = conge.insert(new ArrayList<String>(List.of("JXM", "communion de sa fille", Integer.toString(1), "2023-06-18", "2023-06-12")));
-        // System.out.println(aff);
+    public static void main(String[] args){
+        Pointage point = new Pointage();
+        point.openConnection(url, uid, pwd);
+        ArrayList<ArrayList<String>> output =  point.select(new ArrayList<String>(List.of("datePointage")));
+        point.closeConnection();
+        read2DArrayList(output);
 
-        // test select
-        // ArrayList<ArrayList<String>> testSelect = conge.select(new ArrayList<String>(List.of("numConge", "numEmp", "motif", "nbrjr", "dateDemande", "dateRetour")));
-        // read2DArrayList(testSelect);
+        UsefulMethods.openConnection(url, uid, pwd);
 
-        // test update
-        // HashMap<String, String> param = new HashMap<String, String>();
-        // param.put("dateRetour", "2023-06-19");
-        // param.put("motif", "mariage d'un proche");
-        // int affectedRows = conge.update("UQ6EC6", param);
+        String startDate = UsefulMethods.getStartDate("2023-06-20", 7);
+        System.out.println(startDate);
 
-        // test delete
-        // int affectedRows = conge.delete("R3GC");
+        String now = UsefulMethods.getNowSDateTime();
+        System.out.println(now);
 
-
-        conge.closeConnection();
+        UsefulMethods.closeConnection();
     }
 
     public static void read2DArrayList(ArrayList<ArrayList<String>> tableau){
@@ -45,4 +40,5 @@ class Main{
             System.out.println();
         }
     }
+
 }

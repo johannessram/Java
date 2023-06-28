@@ -1,15 +1,14 @@
 package DBInteractionPackage;
 
-import DBInteractionPackage.DBInteraction;
+import DBInteractionPackage.TableCRUD;
+import DBInteractionPackage.UsefulMethods;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.HashMap;
 
-// FACTORY DESIGN PATTERN, THE ABSTRACT IMPLEMENTATION
-// javac -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar -d . DBInteraction.java Employe.java Conge.java
-public class Employe extends DBInteraction{
+public class Employe extends TableCRUD{
     public ArrayList<String> attributes = new ArrayList<String>(List.of("numEmp", "nom", "prenom", "poste", "salaire"));
 
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> attributes){
@@ -60,9 +59,23 @@ public class Employe extends DBInteraction{
         }
     }
 
+    private int dependancyDelete(String numEmp, String tableName){
+        try{
+            String query = new String("DELETE FROM " + tableName + " WHERE numEmp = ?; ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, numEmp);
+            int affectedRows = preparedStatement.executeUpdate();
+            return affectedRows;
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
+        return -1;
+    }
+
     public int insert(ArrayList<String> attributes){
         System.out.println("INSERTION HEREE");
-        String numEmp = createValablePrimaryKey("employe");
+        String numEmp = UsefulMethods.createValablePrimaryKey("employe");
         attributes.add(0, numEmp);
         try{
             String query = new String("INSERT INTO employe VALUES(?, ?, ?, ?, ?);");
@@ -112,16 +125,11 @@ public class Employe extends DBInteraction{
     }
 
     public int delete(String numEmp){
-        try{
-            String query = new String("DELETE FROM employe WHERE numEmp = ?; ");
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, numEmp);
-            int affectedRows = preparedStatement.executeUpdate();
-            return affectedRows;
-        }
-        catch(Exception exc){
-            System.err.println(exc);
-        }
-        return -1;
+        int affectedInPointage = dependancyDelete(numEmp, "pointage");
+        int affectedInconge = dependancyDelete(numEmp, "conge");
+        int affectedInEmploye = dependancyDelete(numEmp, "employe");
+
+        return affectedInconge + affectedInEmploye + affectedInPointage;
     }
+
 }
