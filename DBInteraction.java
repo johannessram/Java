@@ -4,6 +4,7 @@ package DBInteractionPackage;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 // javac -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar -d . DBInteraction.java
 public abstract class DBInteraction{
@@ -68,6 +69,54 @@ public abstract class DBInteraction{
         }
         return settings;
     }
+
+    // not used and calls a depracated method in java.sql.Date, the constructer
+    // public ArrayList<Integer> splitDateTimeIntoIntegers(String dateTimeAsString){
+    //     ArrayList<Integer> fields = new ArrayList<Integer>();
+    //     final int start = 0;
+    //     final int yearLength = 4;
+    //     String year = dateTimeAsString.substring(start, yearLength);
+    //     int temporary = Integer.parseInt(year);
+    //     fields.add(temporary);
+    //     System.out.println(temporary);
+
+    //     int otherLength = 2;
+    //     int separatorLength = 1;
+    //     for(int i = yearLength + separatorLength; i < dateTimeAsString.length(); i = i + otherLength + separatorLength){
+    //         System.out.println(dateTimeAsString.substring(i, i + otherLength));
+    //         temporary = Integer.parseInt(dateTimeAsString.substring(i, i + otherLength));
+    //         fields.add(temporary);
+    //     }
+    //     return fields;
+    // }
+
+    // public Date convertToDate(String dateTimeAsString){
+    //     ArrayList<Integer> fields = splitDateTimeIntoIntegers(dateTimeAsString);
+    //     int year = fields.get(0);
+    //     int month = fields.get(1);
+    //     int day = fields.get(2);
+    //     return new Date(year, month, day);
+    // }
+
+    public ArrayList<ArrayList<String>> notMarkedPresentOrNULL(){
+        ArrayList<ArrayList<String>> formatedResult = new ArrayList<ArrayList<String>>();
+        try{
+            String query = new String("SELECT * FROM employe LEFT JOIN pointage ON employe.numEmp = pointage.numEmp WHERE pointage IS null; ");
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+            ArrayList<String> conversionParameter = new ArrayList<String>(List.of("numEmp", "nom", "prenom", "poste", "salaire", "datePointage", "pointage"));
+            formatedResult = convertResultSet(conversionParameter, resultSet);
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
+        return formatedResult;
+    }
+
+    // java.sql.Date
+
+
+
 
 
     // METHOD INTERFACES --- Create --- Read --- Update --- Delete

@@ -59,7 +59,7 @@ public class Employe extends DBInteraction{
         }
     }
 
-    private void setVariablesUpdate(PreparedStatement preparedStatement, String numEmp, HashMap<String, String> updateFields){
+    private void setVariablesUpdate(PreparedStatement preparedStatement, String primaryKey, HashMap<String, String> updateFields){
         int i = 0;
         // modifications
         for(String k : updateFields.keySet()){
@@ -72,12 +72,13 @@ public class Employe extends DBInteraction{
         final int nextIndex = 1;
         int conditionIndex = updateFields.size() + nextIndex;
         try{
-            preparedStatement.setString(conditionIndex, numEmp);
+            preparedStatement.setString(conditionIndex, primaryKey);
         }
         catch(Exception exc){
             System.err.println(exc);
         }
     }
+
 
     private void chooseSetter(PreparedStatement preparedStatement, String k, int placeholderIndex, String value){
         try{
@@ -100,7 +101,6 @@ public class Employe extends DBInteraction{
 
         try{
             String query = new String("INSERT INTO employe VALUES(?, ?, ?, ?, ?);");
-            System.out.println(query);
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             setVariablesInsert(preparedStatement, attributes);
             int affectedRows = preparedStatement.executeUpdate();

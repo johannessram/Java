@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.HashMap;
 import DBInteractionPackage.DBInteraction;
 import DBInteractionPackage.Employe;
+import DBInteractionPackage.Pointage;
 
 // java -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar  Main.java
 class Main{
@@ -11,31 +12,34 @@ class Main{
         String uid = "projet4Java";
         String pwd = "test";
         // create an instance of a class named like the table to which we want to CRUD
-        Employe emp = new Employe();
-        emp.openConnection(url, uid, pwd);
+        Pointage point = new Pointage();
+        point.openConnection(url, uid, pwd);
 
         // test Create
-        // int salaire = 300000;
-        // String salaireString = Integer.toString(salaire);
-        // ArrayList<String> arg = new ArrayList<String>(List.of("NOMENA", "FIDERANA VALISOA", "concierge", salaireString));
-        // int affectedRows = emp.insert(arg);
+        // ArrayList<String> arg = new ArrayList<String>(List.of("11E", "oui"));
+        // int affectedRows = point.markAsPresent("QQU");
         // System.out.println("AFFECTED ROWS = " + affectedRows);
 
+        // ArrayList<ArrayList<String>> absentPeopleId = point.notMarkedPresentOrNULL();
+        // read2DArrayList(absentPeopleId);
+        // int absentPeopleNum = point.callItADay();
+        // System.out.println("ABSENT PEOPLE = " + absentPeopleNum);
         // test Read
-        // ArrayList<ArrayList<String>> result = emp.select(new ArrayList<String>(List.of("numEmp", "nom")));
+
+        // ArrayList<ArrayList<String>> result = point.select(new ArrayList<String>(List.of("datePointage", "numEmp", "pointage")));
         // read2DArrayList(result);
 
         // test Update
         // HashMap<String, String> dict = new HashMap<String, String>();
-        // dict.put("salaire", "1");
-        // int affectedRows = emp.update("I8E", dict);
+        // dict.put("pointage", "wuw");
+        // int affectedRows = point.update("2023-06-20 12:34:09", dict);
 
         // test Delete
-        // String code = new String("6KJ");
-        // int affectedRows = emp.delete(code);
+        // String code = new String("2023-06-27 23:12:36");
+        // int affectedRows = point.delete(code);
         // System.out.println("AFFECTED ROWS = " + affectedRows);
 
-        emp.closeConnection();
+        point.closeConnection();
     }
 
     public static void read2DArrayList(ArrayList<ArrayList<String>> tableau){
