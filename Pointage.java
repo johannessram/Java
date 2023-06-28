@@ -4,9 +4,8 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
-import java.util.Calendar;
 
-
+// javac -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar -d . DBInteraction.java Employe.java Conge.java
 public class Pointage extends DBInteraction{
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> providedAttributes){
         try{
@@ -26,6 +25,49 @@ public class Pointage extends DBInteraction{
             onlyId.add(id);
         }
         return onlyId;
+    }
+
+    // faire le pointage
+    public int markAsPresent(String id){
+        return insert(new ArrayList<String>(List.of(id, "oui")));
+    }
+
+    public int callItADay(){
+        ArrayList<String> absentPeopleId = getAbsentPeopleIdOfTheDay();
+        int todayAbsent = 0;
+        for(int i = 0; i < absentPeopleId.size(); i++){
+            ArrayList<String> queryParameter = new ArrayList<String>(List.of(absentPeopleId.get(i), "non"));
+            todayAbsent = insert(queryParameter);
+        }
+        return todayAbsent;
+    }
+
+    private void setVariablesUpdate(PreparedStatement preparedStatement, String primaryKey, HashMap<String, String> updateFields){
+        int i = 0;
+        // modifications
+        for(String k : updateFields.keySet()){
+            i = i + 1;
+            String value = updateFields.get(k);
+            chooseSetter(preparedStatement, k, i, value);
+        }
+
+        final int nextIndex = 1;
+        int conditionIndex = updateFields.size() + nextIndex;
+        try{
+            preparedStatement.setString(conditionIndex, primaryKey);
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
+    }
+
+    private void chooseSetter(PreparedStatement preparedStatement, String k, int placeholderIndex, String value){
+        try{
+            preparedStatement.setString(placeholderIndex, value);
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
     }
 
     // peut-etre qu'on devrait un petit code hoe rehefa tonga ny heure firavana de izay rehetra tsy nanao pointage dia atao non ny an'i zareo?
@@ -60,27 +102,12 @@ public class Pointage extends DBInteraction{
         return formatedResult;
     }
 
-    // faire le pointage
-    public int markAsPresent(String id){
-        return insert(new ArrayList<String>(List.of(id, "oui")));
-    }
-
-    public int callItADay(){
-        ArrayList<String> absentPeopleId = getAbsentPeopleIdOfTheDay();
-        int todayAbsent = 0;
-        for(int i = 0; i < absentPeopleId.size(); i++){
-            ArrayList<String> queryParameter = new ArrayList<String>(List.of(absentPeopleId.get(i), "non"));
-            todayAbsent = insert(queryParameter);
-        }
-        return todayAbsent;
-    }
-
     // tiens toi bien fa tsy immunise contre les injections le misy date fa lany haiky ah amin'ilay formattagen-le izy
     public int update(String dateTimeAsString, HashMap<String, String> updateFields){
         // problem here is about formatting a date
         String settings = joinForUpdate(updateFields);
         try{
-            String query = new String("UPDATE pointage SET " + settings + " WHERE datePointage = \"" + dateTimeAsString + "\"; ");
+            String query = new String("UPDATE pointage SET " + settings + " WHERE datePointage = ?; ");
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             setVariablesUpdate(preparedStatement, dateTimeAsString, updateFields);
             int affectedRows = preparedStatement.executeUpdate();
@@ -90,26 +117,6 @@ public class Pointage extends DBInteraction{
             System.err.println(exc);
         }
         return -1;
-    }
-
-    private void setVariablesUpdate(PreparedStatement preparedStatement, String primaryKey, HashMap<String, String> updateFields){
-        int i = 0;
-        // modifications
-        for(String k : updateFields.keySet()){
-            i = i + 1;
-            String value = updateFields.get(k);
-            chooseSetter(preparedStatement, k, i, value);
-        }
-        System.out.println(preparedStatement);
-    }
-
-    private void chooseSetter(PreparedStatement preparedStatement, String k, int placeholderIndex, String value){
-        try{
-            preparedStatement.setString(placeholderIndex, value);
-        }
-        catch(Exception exc){
-            System.err.println(exc);
-        }
     }
 
     public int delete(String dateTimeAsString){

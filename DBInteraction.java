@@ -5,10 +5,60 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 // javac -classpath .:DBInteractionPackage/mysql-connector-java-8.0.27.jar -d . DBInteraction.java
 public abstract class DBInteraction{
     public Connection connection;
+
+    public String createRandomPrimaryKey(String table){
+        final String possibleCharSet = new String("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+        int numEmpLength = 0;
+        if(table == "employe"){
+            numEmpLength = 3;
+        }
+        else if(table == "conge"){
+            numEmpLength = 6;
+        }
+        String numEmp = new String();
+        for(int i = 0; i < numEmpLength; i++){
+            Random rand = new Random();
+            int generated = rand.nextInt(36);
+            // may produce negative output
+            if(generated < 0){
+                generated = generated * (-1);
+            }
+            numEmp = numEmp.concat(possibleCharSet.substring(generated, generated + 1));
+        }
+        return numEmp;
+    }
+
+    public String createValablePrimaryKey(String table){
+        String keyName = new String();
+        String invalidKey = new String();
+        if(table == "employe"){
+            keyName = "numEmp";
+            invalidKey = "000";
+        }
+        else if(table == "conge"){
+            keyName = "numConge";
+            invalidKey = "0000";
+        }
+        ArrayList<String> column = new ArrayList<String>(List.of(keyName));
+        ArrayList<ArrayList<String>> allPrimaryKey = select(column);
+
+        boolean keyAlreadyTaken;
+        String randomPrimaryKey;
+
+        do{
+            randomPrimaryKey = createRandomPrimaryKey(table);
+            ArrayList<String> wrappedPrimaryKey = new ArrayList<String>(List.of(randomPrimaryKey));
+            keyAlreadyTaken = allPrimaryKey.contains(wrappedPrimaryKey) || randomPrimaryKey == invalidKey;
+        }
+        while(keyAlreadyTaken);
+
+        return randomPrimaryKey;
+    }
 
     // this will serve as the constructor of every inherithing class
     public void openConnection(String url, String uid, String pwd){
