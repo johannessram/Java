@@ -9,7 +9,7 @@ import java.util.Random;
 import java.util.HashMap;
 
 public class Employe extends TableCRUD{
-    public ArrayList<String> attributes = new ArrayList<String>(List.of("numEmp", "nom", "prenom", "poste", "salaire"));
+    public final ArrayList<String> attributes = new ArrayList<String>(List.of("numEmp", "nom", "prenom", "poste", "salaire"));
 
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> attributes){
         try{   
@@ -17,7 +17,7 @@ public class Employe extends TableCRUD{
             preparedStatement.setString(2, attributes.get(1));
             preparedStatement.setString(3, attributes.get(2));
             preparedStatement.setString(4, attributes.get(3));
-            preparedStatement.setInt(5, Integer.parseInt(attributes.get(4)));
+            preparedStatement.setInt(5, Integer.parseInt(attributes.get(4)));            
         }
         catch(Exception exc){
             System.err.println(exc);
@@ -74,7 +74,6 @@ public class Employe extends TableCRUD{
     }
 
     public int insert(ArrayList<String> attributes){
-        System.out.println("INSERTION HEREE");
         String numEmp = UsefulMethods.createValablePrimaryKey("employe");
         attributes.add(0, numEmp);
         try{
@@ -87,7 +86,6 @@ public class Employe extends TableCRUD{
         catch(Exception exc){
             System.err.println(exc);
         }
-        System.out.println("INSERTION HEREE");
         return -1;
     }
 

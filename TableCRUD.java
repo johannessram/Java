@@ -7,32 +7,8 @@ import java.util.List;
 import java.util.Random;
 
 public abstract class TableCRUD extends DBInteraction{
+    public ArrayList<String> attributes;
     // this will serve as the constructor of every inherithing class
-    public ArrayList<ArrayList<String>> convertResultSet(ArrayList<String> attributes, ResultSet input){
-        ArrayList<ArrayList<String>> returnValue = new ArrayList<ArrayList<String>>();
-        try{
-            while(input.next()){
-                ArrayList<String> temporary = new ArrayList<String>();
-                for(int i = 0; i < attributes.size(); i++){
-                    temporary.add(input.getString(attributes.get(i)));
-                }
-                returnValue.add(temporary);
-            }
-        }
-        catch(Exception exc){
-            System.err.println(exc);
-        }
-        return returnValue;
-    }
-
-    public String joinAttributesWithComa(ArrayList<String> attributes){
-        String joinedArray = attributes.get(0);
-        for(int i = 1; i < attributes.size(); i++){
-            joinedArray = joinedArray + ", " + attributes.get(i);
-        }
-        return joinedArray;
-    }
-
     public String joinForUpdate(HashMap<String, String> dict){
         String settings = new String();
         int i = 0;
@@ -46,19 +22,37 @@ public abstract class TableCRUD extends DBInteraction{
         return settings;
     }
 
-    public ArrayList<ArrayList<String>> notMarkedPresentOrNULL(){
-        ArrayList<ArrayList<String>> formatedResult = new ArrayList<ArrayList<String>>();
+    private String formatAttributesForSearch(ArrayList<String> attributes){
+        // ArrayList<String> attributes = childClass.attributes;
+        String formattedAttributes = new String();
+        for(int i = 0; i < attributes.size(); i++){
+            formattedAttributes += attributes.get(i) + " LIKE ? ";
+            int nextIndex = i + 1;
+            if(nextIndex < attributes.size()){
+                formattedAttributes += "OR ";
+            }
+        }
+        return formattedAttributes;
+    }
+
+    // please use all the attributes of each child class
+    public ArrayList<ArrayList<String>> searchUsingKeyword(String keyWord, String tableName, ArrayList<String> attributes){
+        ArrayList<ArrayList<String>> result;
         try{
-            String query = new String("SELECT * FROM employe LEFT JOIN pointage ON employe.numEmp = pointage.numEmp WHERE pointage IS null; ");
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(query);
-            ArrayList<String> conversionParameter = new ArrayList<String>(List.of("numEmp", "nom", "prenom", "poste", "salaire", "datePointage", "pointage"));
-            formatedResult = convertResultSet(conversionParameter, resultSet);
+            String query = new String("SELECT * FROM " + tableName + " WHERE " + formatAttributesForSearch(attributes) + "; ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            final int statementStartIndex = 1;
+            for(int i = 0; i < attributes.size(); i++){
+                preparedStatement.setString(i + statementStartIndex, "%" + keyWord + "%");
+            }
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return convertResultSet(attributes, resultSet);
+            // System.out.println(preparedStatement);
         }
         catch(Exception exc){
             System.err.println(exc);
         }
-        return formatedResult;
+        return new ArrayList<ArrayList<String>>();
     }
 
     // METHOD INTERFACES --- Create --- Read --- Update --- Delete

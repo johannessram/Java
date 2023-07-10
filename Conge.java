@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.HashMap;
 
 public class Conge extends TableCRUD{
+    public final ArrayList<String> attributes = new ArrayList<String>(List.of("numConge", "numEmp", "motif", "nbrjr", "dateDemande", "dateRetour"));
+
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> attributes){
         try{   
             preparedStatement.setString(1, attributes.get(0));
@@ -55,6 +57,26 @@ public class Conge extends TableCRUD{
         }
     }
 
+    // dateDemande is inclusive and dateRetour is not
+    private int adjustPointageTable(ArrayList<String> attributes){
+        final String numEmp = attributes.get(1);
+        final String dateDemande = attributes.get(4);
+        final int nbrjr = Integer.parseInt(attributes.get(3));
+        final String dateRetour = attributes.get(5);
+
+
+        final String congeFlag = "con";
+        String date = dateDemande;
+        int affectedRows = 0;
+        Pointage pointage = new Pointage();
+        System.out.println(date + "et" + dateRetour);
+        for(int i = 0; i < nbrjr; i++){
+            date = UsefulMethods.getEndDate(dateDemande, i);
+            affectedRows += pointage.insert(new ArrayList<String>(List.of(date, numEmp, congeFlag)));
+        }
+        return affectedRows;
+    }
+
     public int insert(ArrayList<String> attributes){
         String primaryKey = UsefulMethods.createValablePrimaryKey("conge");
         attributes.add(0, primaryKey);
@@ -63,6 +85,7 @@ public class Conge extends TableCRUD{
             PreparedStatement preparedStatement = connection.prepareStatement(query);
             setVariablesInsert(preparedStatement, attributes);
             int affectedRows = preparedStatement.executeUpdate();
+            affectedRows += adjustPointageTable(attributes);
             return affectedRows;
         }
         catch(Exception exc){

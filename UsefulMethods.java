@@ -12,6 +12,7 @@ AND DO NOT FORGET TO CLOSE IT: UsefulMethods.closeConnection()
 */
 
 public class UsefulMethods extends DBInteraction{
+
     public static String createRandomPrimaryKey(String table){
         final String possibleCharSet = new String("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
         int numEmpLength = 0;
@@ -138,5 +139,82 @@ public class UsefulMethods extends DBInteraction{
     public static String getStartDate(String endDate, int numOfDays){
         int rewindNumOfDays = numOfDays * (-1);
         return UsefulMethods.getEndDate(endDate, rewindNumOfDays);
+    }
+
+    public static ArrayList<ArrayList<String>> consultNumOfDaysLeft(ArrayList<String> columns, String year){
+        ArrayList<ArrayList<String>> returnArray = new ArrayList<ArrayList<String>>();
+        Employe employe = new Employe();
+        returnArray = employe.select(columns);
+        final int lastIndex = returnArray.get(0).size();
+        for(ArrayList<String> temp : returnArray){
+            final int numEmpIndex = 0;
+            final int reste = consultNumOfDaysLeft(temp.get(0), year);
+            temp.add(lastIndex, Integer.toString(reste));
+        }
+        return returnArray;
+    }
+
+    // Consulter le reste de nombre de jour de conge de chaque employe
+    private static int consultNumOfDaysLeft(String numEmp, String year){
+        try{
+            // select 30 - count(pointage) as nbrConge from pointage where pointage = "con" and numEmp = "11A" and year(datePointage) = 2022;
+            String query = new String("SELECT numEmp, 30 - COUNT(pointage) AS reste FROM pointage WHERE pointage = \"con\" AND numEmp = ? AND YEAR(datePointage) = ?; ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, numEmp);
+            preparedStatement.setString(2, year);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                return resultSet.getInt("reste");
+            }
+        }
+        catch(Exception exc){
+            System.err.println("ERROR!! RETURN -30 REGARDLESS OF THE INPUT");
+            System.err.println(exc);
+        }
+        return -30;
+    }
+
+    // select count(pointage) from pointage where numEmp = "LLW" and pointage = "non" and day(datePointage) = 04;
+    private static int absence(String date, String numEmp){
+        int result = -1;
+        try{
+            String query = new String("SELECT COUNT(pointage) AS absence FROM pointage WHERE pointage = \"non\" AND numEmp = ? AND MONTH(datePointage) = MONTH( ? ) AND YEAR(datePointage) = YEAR( ? ); ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, numEmp);
+            preparedStatement.setString(2, date);
+            preparedStatement.setString(3, date);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet.next();
+            result = resultSet.getInt("absence");
+        }
+        catch(Exception exc){
+            System.err.println("FETCH FAILED, RETURN -1 REGARDLESS OF THE INPUT");
+            System.err.println(exc);
+        }
+        return result;
+    }
+
+    private static int currentPay(String numEmp){
+        try{
+            String query = new String("SELECT salaire FROM employe WHERE numEmp = ?; ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, numEmp);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                return resultSet.getInt("salaire");
+            }
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
+        return 0;
+    }
+
+    public static int leftPay(String date, String numEmp){
+        final int absenceNum = absence(date, numEmp);
+        final int punishment = -10000;
+
+        final int currentPay = currentPay(numEmp);
+        return currentPay + (absenceNum)*(punishment);
     }
 }
