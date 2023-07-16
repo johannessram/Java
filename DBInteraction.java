@@ -4,9 +4,6 @@ import java.sql.*;
 import java.util.ArrayList;
 
 public abstract class DBInteraction{
-    // public static String _url;
-    // public static String _uid;
-    // public static String _pwd;
     public static Connection connection;
 
     public static ArrayList<ArrayList<String>> convertResultSet(ArrayList<String> attributes, ResultSet input){
@@ -27,10 +24,6 @@ public abstract class DBInteraction{
     }
 
     public static void openConnection(String url, String uid, String pwd){
-        // _url = url;
-        // _uid = uid;
-        // _pwd = pwd;
-
         try{
             Driver monDriver = new com.mysql.jdbc.Driver();
             DriverManager.registerDriver(monDriver);

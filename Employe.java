@@ -9,6 +9,8 @@ import java.util.Random;
 import java.util.HashMap;
 
 public class Employe extends TableCRUD{
+    public String tableName = new String("employe");
+
     public final ArrayList<String> attributes = new ArrayList<String>(List.of("numEmp", "nom", "prenom", "poste", "salaire"));
 
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> attributes){
@@ -74,7 +76,10 @@ public class Employe extends TableCRUD{
     }
 
     public int insert(ArrayList<String> attributes){
-        String numEmp = UsefulMethods.createValablePrimaryKey("employe");
+        if(attributes.size() != 4){
+            return -1;
+        }
+        String numEmp = createValablePrimaryKey("employe");
         attributes.add(0, numEmp);
         try{
             String query = new String("INSERT INTO employe VALUES(?, ?, ?, ?, ?);");
@@ -90,14 +95,12 @@ public class Employe extends TableCRUD{
     }
 
     public ArrayList<ArrayList<String>> select(ArrayList<String> columns){
-        String joinedColumns = joinAttributesWithComa(columns);
         ArrayList<ArrayList<String>> formatedResult = new ArrayList<ArrayList<String>>();
         try{
-            String query = new String("SELECT " + joinedColumns + " FROM employe");
+            String query = new String("SELECT * FROM employe");
             ResultSet reader;
             Statement statement = connection.createStatement();
             reader = statement.executeQuery(query);
-            // convertResultSet of the parent
             formatedResult = convertResultSet(columns, reader);
         }
         catch(Exception exc){
@@ -106,7 +109,6 @@ public class Employe extends TableCRUD{
         return formatedResult;
     }
 
-    // to be supplied a HashMap with a string as key, and a string as well as the replacement value
     public int update(String numEmp, HashMap<String, String> updateFields){
         String settings = joinForUpdate(updateFields);
         try{
@@ -129,5 +131,4 @@ public class Employe extends TableCRUD{
 
         return affectedInconge + affectedInEmploye + affectedInPointage;
     }
-
 }

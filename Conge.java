@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.HashMap;
 
 public class Conge extends TableCRUD{
+    public String tableName = new String("conge");
     public final ArrayList<String> attributes = new ArrayList<String>(List.of("numConge", "numEmp", "motif", "nbrjr", "dateDemande", "dateRetour"));
 
     private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> attributes){
@@ -78,7 +79,7 @@ public class Conge extends TableCRUD{
     }
 
     public int insert(ArrayList<String> attributes){
-        String primaryKey = UsefulMethods.createValablePrimaryKey("conge");
+        String primaryKey = createValablePrimaryKey("conge");
         attributes.add(0, primaryKey);
         try{
             String query = new String("INSERT INTO conge VALUES(?, ?, ?, ?, ?, ?); ");

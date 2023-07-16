@@ -13,57 +13,6 @@ AND DO NOT FORGET TO CLOSE IT: UsefulMethods.closeConnection()
 
 public class UsefulMethods extends DBInteraction{
 
-    public static String createRandomPrimaryKey(String table){
-        final String possibleCharSet = new String("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
-        int numEmpLength = 0;
-        if(table == "employe"){
-            numEmpLength = 3;
-        }
-        else if(table == "conge"){
-            numEmpLength = 6;
-        }
-        String numEmp = new String();
-        for(int i = 0; i < numEmpLength; i++){
-            Random rand = new Random();
-            int generated = rand.nextInt(36);
-            // may produce negative output
-            if(generated < 0){
-                generated = generated * (-1);
-            }
-            numEmp = numEmp.concat(possibleCharSet.substring(generated, generated + 1));
-        }
-        return numEmp;
-    }
-
-    public static String createValablePrimaryKey(String table){
-        TableCRUD concernedTable;
-        String keyName = new String();
-        String invalidKey = new String();
-        if(table == "employe"){
-            concernedTable = new Employe();
-            keyName = "numEmp";
-            invalidKey = "000";
-        }
-        // else if(table == "conge")
-        else{
-            concernedTable = new Conge();
-            keyName = "numConge";
-            invalidKey = "0000";
-        }
-        ArrayList<String> column = new ArrayList<String>(List.of(keyName));
-        ArrayList<ArrayList<String>> allPrimaryKey = concernedTable.select(column);
-        boolean keyAlreadyTaken;
-        String randomPrimaryKey;
-        do{
-            randomPrimaryKey = createRandomPrimaryKey(table);
-            ArrayList<String> wrappedPrimaryKey = new ArrayList<String>(List.of(randomPrimaryKey));
-            keyAlreadyTaken = allPrimaryKey.contains(wrappedPrimaryKey) || randomPrimaryKey == invalidKey;
-        }
-        while(keyAlreadyTaken);
-
-        return randomPrimaryKey;
-    }
-
     public static String getNowSDateTime(){
         String dateTime = new String("0000-00-00 00:00:00");
         try{
@@ -141,39 +90,6 @@ public class UsefulMethods extends DBInteraction{
         return UsefulMethods.getEndDate(endDate, rewindNumOfDays);
     }
 
-    public static ArrayList<ArrayList<String>> consultNumOfDaysLeft(ArrayList<String> columns, String year){
-        ArrayList<ArrayList<String>> returnArray = new ArrayList<ArrayList<String>>();
-        Employe employe = new Employe();
-        returnArray = employe.select(columns);
-        final int lastIndex = returnArray.get(0).size();
-        for(ArrayList<String> temp : returnArray){
-            final int numEmpIndex = 0;
-            final int reste = consultNumOfDaysLeft(temp.get(0), year);
-            temp.add(lastIndex, Integer.toString(reste));
-        }
-        return returnArray;
-    }
-
-    // Consulter le reste de nombre de jour de conge de chaque employe
-    private static int consultNumOfDaysLeft(String numEmp, String year){
-        try{
-            // select 30 - count(pointage) as nbrConge from pointage where pointage = "con" and numEmp = "11A" and year(datePointage) = 2022;
-            String query = new String("SELECT numEmp, 30 - COUNT(pointage) AS reste FROM pointage WHERE pointage = \"con\" AND numEmp = ? AND YEAR(datePointage) = ?; ");
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            preparedStatement.setString(1, numEmp);
-            preparedStatement.setString(2, year);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while(resultSet.next()){
-                return resultSet.getInt("reste");
-            }
-        }
-        catch(Exception exc){
-            System.err.println("ERROR!! RETURN -30 REGARDLESS OF THE INPUT");
-            System.err.println(exc);
-        }
-        return -30;
-    }
-
     // select count(pointage) from pointage where numEmp = "LLW" and pointage = "non" and day(datePointage) = 04;
     private static int absence(String date, String numEmp){
         int result = -1;
@@ -210,6 +126,81 @@ public class UsefulMethods extends DBInteraction{
         return 0;
     }
 
+    private static String formatAttributesForSearch(ArrayList<String> attributes){
+        // ArrayList<String> attributes = childClass.attributes;
+        String formattedAttributes = new String();
+        for(int i = 0; i < attributes.size(); i++){
+            formattedAttributes += attributes.get(i) + " LIKE ? ";
+            int nextIndex = i + 1;
+            if(nextIndex < attributes.size()){
+                formattedAttributes += "OR ";
+            }
+        }
+        return formattedAttributes;
+    }
+
+    // Liste des employes absents pour une date (2pts) ----------- 1
+    public ArrayList<ArrayList<String>> getAbsentPeopleGivenADate(ArrayList<String> columns, String date, boolean nonKeyWord, boolean conKeyWord){
+        Pointage pointage = new Pointage();
+        return pointage.getAbsentPeopleGivenADate(columns, date, nonKeyWord, conKeyWord);
+    }
+
+    // Liste des employes absents pour une date (2pts) ----------- 2
+    public static ArrayList<ArrayList<String>> consultNumOfDaysLeft(ArrayList<String> columns, String year){
+        ArrayList<ArrayList<String>> returnArray = new ArrayList<ArrayList<String>>();
+        Employe employe = new Employe();
+        returnArray = employe.select(columns);
+        final int lastIndex = returnArray.get(0).size();
+        for(ArrayList<String> temp : returnArray){
+            final int numEmpIndex = 0;
+            final int reste = consultNumOfDaysLeft(temp.get(0), year);
+            temp.add(lastIndex, Integer.toString(reste));
+        }
+        return returnArray;
+    }
+
+    // Consulter le reste de nombre de jour de conge de chaque employe
+    private static int consultNumOfDaysLeft(String numEmp, String year){
+        try{
+            // select 30 - count(pointage) as nbrConge from pointage where pointage = "con" and numEmp = "11A" and year(datePointage) = 2022;
+            String query = new String("SELECT numEmp, 30 - COUNT(pointage) AS reste FROM pointage WHERE pointage = \"con\" AND numEmp = ? AND YEAR(datePointage) = ?; ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, numEmp);
+            preparedStatement.setString(2, year);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while(resultSet.next()){
+                return resultSet.getInt("reste");
+            }
+        }
+        catch(Exception exc){
+            System.err.println("ERROR!! RETURN -30 REGARDLESS OF THE INPUT");
+            System.err.println(exc);
+        }
+        return -30;
+    }
+
+    // Recherche d'un employe par son nom ou prenom en utilisant  LIKE % ...%  (1pt)
+    // please use all the attributes of each child class
+    public static ArrayList<ArrayList<String>> searchUsingKeyword(String keyWord, String tableName, ArrayList<String> attributes){
+        ArrayList<ArrayList<String>> result;
+        try{
+            String query = new String("SELECT * FROM " + tableName + " WHERE " + formatAttributesForSearch(attributes) + "; ");
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            final int statementStartIndex = 1;
+            for(int i = 0; i < attributes.size(); i++){
+                preparedStatement.setString(i + statementStartIndex, "%" + keyWord + "%");
+            }
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return convertResultSet(attributes, resultSet);
+            // System.out.println(preparedStatement);
+        }
+        catch(Exception exc){
+            System.err.println(exc);
+        }
+        return new ArrayList<ArrayList<String>>();
+    }
+
+    // A chaque absence d'un employe, son salaire se soustrait de 10.000 Ar (2 pts)
     public static int leftPay(String date, String numEmp){
         final int absenceNum = absence(date, numEmp);
         final int punishment = -10000;

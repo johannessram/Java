@@ -6,20 +6,21 @@ import java.util.List;
 import java.sql.*;
 
 public class Pointage extends TableCRUD{
+    public String tableName = new String("pointage");
     public final ArrayList<String> attributes = new ArrayList<String>(List.of("datePointage", "numEmp", "pointage"));
 
-    private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> providedAttributes){
+    private void setVariablesInsert(PreparedStatement preparedStatement, ArrayList<String> attributes){
         try{
-            preparedStatement.setString(1, providedAttributes.get(0));
-            preparedStatement.setString(2, providedAttributes.get(1));
-            preparedStatement.setString(3, providedAttributes.get(2));
+            preparedStatement.setString(1, attributes.get(0));
+            preparedStatement.setString(2, attributes.get(1));
+            preparedStatement.setString(3, attributes.get(2));
         }
         catch(Exception exc){
             System.err.println(exc);
         }
     }
 
-    public boolean isAlreadyMarkedPresent(String numEmp){
+    private boolean isAlreadyMarkedPresent(String numEmp){
         String query = new String("SELECT COUNT(datePointage) AS yes FROM pointage WHERE DATE(datePointage) = DATE(NOW()) AND pointage = \"oui\" AND numEmp = ?; ");
         int yes = 1;
         try{
@@ -37,22 +38,6 @@ public class Pointage extends TableCRUD{
             System.err.println(exc);
         }
         return false;
-    }
-
-    // faire le pointage
-    public int markAsPresent(String id){
-        if(isAlreadyMarkedPresent(id)){
-            return 0;
-        }
-        String todaySDate = UsefulMethods.getNowSDate();
-        todaySDate = todaySDate.concat(" 00:00:00");
-        String now = UsefulMethods.getNowSDateTime();
-        String nouveauPointage = "oui";
-        HashMap <String, String> updateFields = new HashMap<String, String>();
-        updateFields.put("datePointage", now);
-        updateFields.put("pointage", "oui");
-
-        return update(todaySDate, updateFields);
     }
 
     private void setVariablesUpdate(PreparedStatement preparedStatement, String primaryKey, HashMap<String, String> updateFields){
@@ -101,7 +86,8 @@ public class Pointage extends TableCRUD{
 
     public ArrayList<ArrayList<String>> getAbsentPeopleGivenADate(ArrayList<String> columns, String date, boolean nonKeyWord, boolean conKeyWord){
         if(!nonKeyWord && !conKeyWord){
-            return new ArrayList<ArrayList<String>>();
+            Employe employe = new Employe();
+            return employe.select(columns);
         }
         else if(conKeyWord && !nonKeyWord){
             // use a special command if only dayOff people are needed
@@ -128,7 +114,6 @@ public class Pointage extends TableCRUD{
             }
             preparedStatement.setString(1, date);
             preparedStatement.setString(2, "oui");
-            System.out.println(preparedStatement);
             resultSet = preparedStatement.executeQuery();
             formatedResult = convertResultSet(columns, resultSet);
         }
@@ -142,8 +127,10 @@ public class Pointage extends TableCRUD{
         ArrayList<ArrayList<String>> absentPeopleId = getAbsentPeopleGivenADate(new ArrayList<String>(List.of("numEmp")), date, true, false);
         int todayAbsent = 0;
         for(int i = 0; i < absentPeopleId.size(); i++){
-            ArrayList<String> queryParameter = new ArrayList<String>(List.of(date, absentPeopleId.get(i).get(0), "non"));
-            todayAbsent = insert(queryParameter);
+            String newKey = createDateTimePrimaryKey(i);
+            ArrayList<String> queryParameter = new ArrayList<String>(List.of(absentPeopleId.get(i).get(0), "non"));
+            queryParameter.add(0, newKey);
+            todayAbsent += insert(queryParameter);
         }
         return todayAbsent;
     }
@@ -152,13 +139,30 @@ public class Pointage extends TableCRUD{
         return callItADay(UsefulMethods.getNowSDate());
     }
 
-    // peut-etre qu'on devrait un petit code hoe rehefa tonga ny heure firavana de izay rehetra tsy nanao pointage dia atao non ny an'i zareo?
-    // ou peut-etre ataoko ny code hoe callItADay de ataony non izay employe rehetra tsy nanao pointage androany. Bref apetrako eto ity de ngamba ny mety asina bouton eh?
-    public int insert(ArrayList<String> providedAttributes){
+    // faire le pointage
+    public int markAsPresent(String id){
+        if(isAlreadyMarkedPresent(id)){
+            return 0;
+        }
+        String todaySDate = UsefulMethods.getNowSDate();
+        todaySDate = todaySDate.concat(" 00:00:00");
+        String now = UsefulMethods.getNowSDateTime();
+        String nouveauPointage = "oui";
+        HashMap <String, String> updateFields = new HashMap<String, String>();
+        updateFields.put("datePointage", now);
+        updateFields.put("pointage", "oui");
+
+        return update(todaySDate, updateFields);
+    }
+
+    public int insert(ArrayList<String> attributes){
+        if(attributes.size() != 3){
+            return -1;
+        }
         try{
             String query = new String("INSERT INTO pointage VALUES(?, ?, ?); ");
             PreparedStatement preparedStatement = connection.prepareStatement(query);
-            setVariablesInsert(preparedStatement, providedAttributes);
+            setVariablesInsert(preparedStatement, attributes);
             int affectedRows = preparedStatement.executeUpdate();
             return affectedRows;
         }
